@@ -2,7 +2,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import Navbar from './components/Navbar';
-// import Footer from '../components/Footer';
+import Footer from './components/Footer';
 
 export const metadata = {
   title: 'Medium Clone — My Capstone',
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </div>
         </main>
-        {/* <Footer /> */}
+        <Footer />
       </body>
     </html>
   );
