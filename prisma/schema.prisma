@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  email       String   @unique
+  password    String
+  role        Role     @default(USER)
+  avatar      String?  // URL to avatar image
+  bio         String?  @db.Text
+  username    String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  posts       Post[]
+  comments    Comment[]
+  claps       Clap[]
+  following   Follow[] @relation("Following")  // who this user follows
+  followers   Follow[] @relation("Followers")  // who follows this user
+}
+
+// Role enum
+enum Role {
+  USER
+  ADMIN
+}
+
+// 2. Post
+model Post {
+  id           Int       @id @default(autoincrement())
+  slug         String    @unique
+  title        String
+  excerpt      String?   @db.Text
+  content      String    @db.Text
+  coverImage   String?
+  status       PostStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  author       User      @relation(fields: [authorId], references: [id])
+  authorId     Int
+
+  tags         PostTag[]
+  comments     Comment[]
+  claps        Clap[]
+}
+
+// Post status
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// 3. Tag
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+
+  posts PostTag[]
+}
+
+// 4. Post ↔ Tag (many-to-many)
+model PostTag {
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  Int
+
+  @@id([postId, tagId])
+}
+
+// 5. Comment (supports replies)
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String    @db.Text
+  createdAt DateTime  @default(now())
+
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  Int
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+
+  parent    Comment?  @relation("Replies", fields: [parentId], references: [id])
+  parentId  Int?
+  replies   Comment[] @relation("Replies")
+}
+
+// 6. Clap / Like (one user can clap once per post)
+model Clap {
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+  post    Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId  Int
+
+  @@id([userId, postId])
+}
+
+// 7. Follow system
+model Follow {
+  follower    User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  Int
+  following   User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId Int
+
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
