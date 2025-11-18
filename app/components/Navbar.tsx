@@ -1,151 +1,131 @@
-"use client"; 
+"use client";
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X } from "lucide-react"; 
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
-
+import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+
   return (
-    <nav className="w-full bg-stone-800 text-white shadow-lg fixed top-0 left-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    <nav className="w-full bg-stone-900 text-white shadow-lg fixed top-0 left-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-xl font-semibold tracking-wide">
-            StorySphere
-          </Link>
-        </div>
+        <Link href="/" className="text-2xl font-bold tracking-tight">
+          StorySphere
+        </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden md:flex items-center gap-8 text-base">
-          <Link href="/" className="hover:text-stone-300 transition-all">
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="/" className="hover:text-stone-300 transition">
             Home
           </Link>
-          <Link href="/stories" className="hover:text-stone-300 transition-all">
+          <Link href="/stories" className="hover:text-stone-300 transition">
             Stories
           </Link>
-          <Link href="/categories" className="hover:text-stone-300 transition-all">
-            Categories
-          </Link>
-          <Link href="/about" className="hover:text-stone-300 transition-all">
+          <Link href="/about" className="hover:text-stone-300 transition">
             About
-          </Link>
-          <Link href="/contact" className="hover:text-stone-300 transition-all">
-            Contact
           </Link>
         </div>
 
-        {/* Desktop Auth Buttons */}
+        {/* Desktop Auth + Write Button */}
         <div className="hidden md:flex items-center gap-4">
-  {user ? (
-    <>
-      <Link href="/profile" className="text-stone-700 hover:text-stone-900 font-medium">
-        Profile
-      </Link>
-      <button
-        onClick={() => supabase.auth.signOut()}
-        className="px-5 py-2 bg-stone-700 text-white rounded-xl hover:bg-stone-800 transition"
-      >
-        Logout
-      </button>
-    </>
-  ) : (
-    <>
-      <Link href="/login" className="text-stone-700 hover:text-stone-900 font-medium">
-        Login
-      </Link>
-      <Link
-        href="/register"
-        className="px-5 py-2 bg-stone-700 text-white rounded-xl hover:bg-stone-800 transition"
-      >
-        Sign Up
-      </Link>
-    </>
-  )}
-</div>
-        {/* Mobile menu button */}
+          {user ? (
+            <>
+              <Link
+                href="/write"
+                className="px-6 py-2.5 bg-stone-700 hover:bg-stone-600 text-white font-medium rounded-full transition shadow-md"
+              >
+                Write
+              </Link>
+              <Link href="/profile" className="hover:text-stone-300 transition font-medium">
+                Profile
+              </Link>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="px-5 py-2.5 bg-stone-700 hover:bg-stone-600 rounded-full transition font-medium"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="hover:text-stone-300 transition font-medium">
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-full transition shadow-md"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden z-50"
+          className="md:hidden"
         >
           {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
-      {/* Mobile menu - slides down */}
-      <div
-        className={`md:hidden absolute top-full left-0 w-full bg-stone-800 shadow-lg transition-all duration-300 ease-in-out overflow-hidden ${
-          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="flex flex-col px-6 py-4 space-y-4">
-          <Link
-            href="/"
-            className="hover:text-stone-300 transition-all"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Home
-          </Link>
-          <Link
-            href="/stories"
-            className="hover:text-stone-300 transition-all"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Stories
-          </Link>
-          <Link
-            href="/categories"
-            className="hover:text-stone-300 transition-all"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Categories
-          </Link>
-          <Link
-            href="/about"
-            className="hover:text-stone-300 transition-all"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            About
-          </Link>
-          <Link
-            href="/contact"
-            className="hover:text-stone-300 transition-all"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Contact
-          </Link>
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-stone-800 border-t border-stone-700">
+          <div className="px-6 py-6 space-y-4">
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block text-lg hover:text-stone-300">
+              Home
+            </Link>
+            <Link href="/stories" onClick={() => setMobileMenuOpen(false)} className="block text-lg hover:text-stone-300">
+              Stories
+            </Link>
+            <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="block text-lg hover:text-stone-300">
+              About
+            </Link>
 
-         {user ? (
-  <>
-    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-300">
-      Profile
-    </Link>
-    <button
-      onClick={() => {
-        supabase.auth.signOut();
-        setMobileMenuOpen(false);
-      }}
-      className="w-full text-left py-2 text-stone-700"
-    >
-      Logout
-    </button>
-  </>
-) : (
-  <>
-    <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-700">
-      Login
-    </Link>
-    <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-300">
-      Sign Up
-    </Link>
-  </>
-)}
+            <div className="border-t border-stone-700 pt-4 mt-4">
+              {user ? (
+                <>
+                  <Link href="/write" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center py-3 bg-emerald-600 hover:bg-emerald-700 rounded-full text-white font-medium mb-3">
+                    Write a Story
+                  </Link>
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-white">
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      supabase.auth.signOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-3 bg-stone-700 hover:bg-stone-600 rounded-full text-white font-medium"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-white">
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full text-center py-3 bg-emerald-600 hover:bg-emerald-700 rounded-full text-white font-medium"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }
