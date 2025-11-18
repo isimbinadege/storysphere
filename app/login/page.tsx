@@ -2,6 +2,19 @@
 import Link from "next/link";
 
 export default function Login() {
+    const handleSubmit = async (e: React formEvent) => {
+  e.preventDefault();
+  setLoading(true);
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    router.push("/profile");
+  }
+  setLoading(false);
+};
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
