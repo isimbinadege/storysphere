@@ -121,7 +121,7 @@ export default function Navbar() {
 
          {user ? (
   <>
-    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-700">
+    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-300">
       Profile
     </Link>
     <button
@@ -139,7 +139,7 @@ export default function Navbar() {
     <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-700">
       Login
     </Link>
-    <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-700">
+    <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-stone-300">
       Sign Up
     </Link>
   </>

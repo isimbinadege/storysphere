@@ -1,20 +1,43 @@
-// app/login/page.tsx
+
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 
 export default function Login() {
-    const handleSubmit = async (e: React formEvent) => {
-  e.preventDefault();
-  setLoading(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  if (error) {
-    alert(error.message);
-  } else {
-    router.push("/profile");
-  }
-  setLoading(false);
-};
+    if (!email || !password) {
+      setError("Please fill in both email and password");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      // Login successful → redirect to profile
+      router.push("/profile");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
@@ -34,7 +57,7 @@ export default function Login() {
             Log in to your account
           </h2>
 
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -42,7 +65,10 @@ export default function Login() {
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="john@example.com"
+                required
                 className="w-full px-5 py-3.5 bg-gray-50 border border-gray-300 rounded-xl text-stone-800 placeholder-stone-500 focus:outline-none focus:border-stone-500 focus:ring-4 focus:ring-stone-100 transition"
               />
             </div>
@@ -54,7 +80,10 @@ export default function Login() {
               </label>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
+                required
                 className="w-full px-5 py-3.5 bg-gray-50 border border-gray-300 rounded-xl text-stone-800 placeholder-stone-500 focus:outline-none focus:border-stone-500 focus:ring-4 focus:ring-stone-100 transition"
               />
             </div>
@@ -70,12 +99,16 @@ export default function Login() {
               </a>
             </div>
 
+            {/* Error Message */}
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-4 bg-stone-700 hover:bg-stone-800 text-white font-semibold rounded-xl transition duration-200 shadow-md transform hover:scale-[1.02] active:scale-100"
+              disabled={loading}
+              className="w-full py-4 bg-stone-700 hover:bg-stone-800 disabled:bg-stone-500 text-white font-semibold rounded-xl transition duration-200 shadow-md transform hover:scale-[1.02] active:scale-100"
             >
-              Log In
+              {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
 
