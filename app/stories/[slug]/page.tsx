@@ -1,10 +1,11 @@
 // app/stories/[slug]/page.tsx
 import { supabase } from "@/lib/supabaseClient";
+import ClapButton from "../../components/ClapButton";
 
 async function getStoryBySlug(slug: string) {
   const { data } = await supabase
     .from("posts")
-    .select("*")
+    .select("id, title, content, cover_image, created_at, claps_count")
     .eq("slug", slug)
     .single();
 
@@ -25,7 +26,6 @@ export default async function StoryPage({ params }: { params: { slug: string } }
   return (
     <article className="min-h-screen bg-stone-50 pt-24 px-4 pb-20">
       <div className="max-w-4xl mx-auto">
-        {/* COVER IMAGE AT THE TOP */}
         {story.cover_image && (
           <img
             src={story.cover_image}
@@ -51,6 +51,11 @@ export default async function StoryPage({ params }: { params: { slug: string } }
           className="prose prose-lg max-w-none prose-stone prose-headings:text-stone-800 prose-p:text-stone-700 prose-a:text-stone-600 prose-strong:font-bold prose-blockquote:border-l-stone-400 prose-blockquote:pl-6 prose-blockquote:italic prose-img:rounded-xl prose-img:my-10"
           dangerouslySetInnerHTML={{ __html: story.content }}
         />
+
+        {/* CLAP BUTTON */}
+        <div className="mt-20 pt-10 border-t border-stone-200">
+          <ClapButton postId={story.id} initialCount={story.claps_count || 0} />
+        </div>
       </div>
     </article>
   );
