@@ -1,3 +1,4 @@
+// components/ClapButton.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,22 +17,25 @@ export default function ClapButton({ postId, initialCount }: ClapButtonProps) {
   const [hasClapped, setHasClapped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // FIXED: Check if user already clapped
   useEffect(() => {
-    if (async () => {
-      if (user) {
-        const { data } = await supabase
-          .from("claps")
-          .select("count")
-          .eq("user_id", user.id)
-          .eq("post_id", postId)
-          .single();
+    const checkUserClap = async () => {
+      if (!user) return;
 
-        if (data) {
-          setHasClapped(true);
-          setCount(data.count + initialCount);
-        }
+      const { data, error } = await supabase
+        .from("claps")
+        .select("count")
+        .eq("user_id", user.id)
+        .eq("post_id", postId)
+        .maybeSingle(); // important: use maybeSingle() in case no row
+
+      if (data && !error) {
+        setHasClapped(true);
+        setCount(initialCount + data.count);
       }
-    })();
+    };
+
+    checkUserClap();
   }, [user, postId, initialCount]);
 
   const handleClap = async () => {
@@ -44,14 +48,15 @@ export default function ClapButton({ postId, initialCount }: ClapButtonProps) {
     setTimeout(() => setIsAnimating(false), 600);
 
     const newCount = count + 1;
+    const clapsToSave = hasClapped ? newCount - initialCount : 1;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("claps")
       .upsert(
         {
           user_id: user.id,
           post_id: postId,
-          count: newCount - initialCount,
+          count: clapsToSave,
         },
         { onConflict: "user_id,post_id" }
       );
@@ -60,25 +65,28 @@ export default function ClapButton({ postId, initialCount }: ClapButtonProps) {
       setCount(newCount);
       setHasClapped(true);
 
-      // Update posts table total
+      // Increment total claps in posts table
       await supabase.rpc("increment_claps", { post_id: postId });
+    } else {
+      console.error("Clap error:", error);
     }
   };
 
   return (
     <button
       onClick={handleClap}
-      className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${
+      className={`flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg ${
         hasClapped
           ? "bg-red-100 text-red-700 hover:bg-red-200"
           : "bg-stone-200 text-stone-700 hover:bg-stone-300"
-      } ${isAnimating ? "animate-ping-once" : ""}`}
+      } ${isAnimating ? "animate-pulse" : ""}`}
     >
       <Heart
-        size={24}
-        className={hasClapped ? "fill-red-700" : ""}
+        size={28}
+        className={`transition-all ${hasClapped ? "fill-red-700" : ""}`}
       />
-      <span className="text-lg">{count}</span>
+      <span>{count}</span>
+      <span className="hidden sm:inline">Claps</span>
     </button>
   );
 }
