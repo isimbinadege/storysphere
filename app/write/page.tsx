@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Bold, Italic, List, ListOrdered } from "lucide-react";
 
 export default function Write() {
   const { user, loading: authLoading } = useAuth();
@@ -19,11 +19,15 @@ export default function Write() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit.configure({ heading: false })],
+    extensions: [
+      StarterKit.configure({
+        heading: false, // we use custom toolbar instead
+      }),
+    ],
     content: "<p>Start writing your story here...</p>",
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none focus:outline-none min-h-96 p-10 bg-white rounded-xl border-2 border-gray-300",
+        class: "prose prose-lg max-w-none focus:outline-none min-h-96 p-10 bg-white rounded-2xl border-2 border-gray-300",
       },
     },
   });
@@ -37,23 +41,20 @@ export default function Write() {
     if (!file || !user) return;
 
     setUploading(true);
-
     const fileExt = file.name.split(".").pop();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`; // organized folder
+    const filePath = `${user.id}/${fileName}`;
 
     const { error } = await supabase.storage
       .from("covers")
       .upload(filePath, file, { upsert: true });
 
     if (error) {
-      console.error("Upload error:", error);
       alert("Upload failed: " + error.message);
       setUploading(false);
       return;
     }
 
-    // THIS LINE WAS MISSING BEFORE — NOW IT WORKS!
     const { data: { publicUrl } } = supabase.storage
       .from("covers")
       .getPublicUrl(filePath);
@@ -86,10 +87,8 @@ export default function Write() {
     });
 
     setSaving(false);
-
     if (error) {
-      console.error("Publish error:", error);
-      alert("Publish failed: " + error.message);
+      alert("Error: " + error.message);
     } else {
       alert("Story published successfully!");
       router.push("/stories");
@@ -111,7 +110,7 @@ export default function Write() {
           className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder-stone-400 text-stone-800 text-center mb-10"
         />
 
-        {/* COVER IMAGE UPLOADER — NOW WORKS 100% */}
+        {/* COVER IMAGE */}
         <div className="mb-12">
           {coverImage ? (
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
@@ -125,21 +124,40 @@ export default function Write() {
             </div>
           ) : (
             <label className="flex flex-col items-center justify-center w-full h-96 border-4 border-dashed border-stone-300 rounded-2xl cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition bg-white">
-              <ImageIcon size={80} className="text-stone-400 mb-6" />
+              <Upload size={80} className="text-stone-400 mb-6" />
               <p className="text-2xl font-medium text-stone-600">Upload Cover Image</p>
-              <p className="text-stone-500 mt-2">Click or drag & drop</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                disabled={uploading}
-              />
-              {uploading && (
-                <p className="mt-6 text-stone-700 font-medium">Uploading... Please wait</p>
-              )}
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
+              {uploading && <p className="mt-6 text-stone-700 font-medium">Uploading...</p>}
             </label>
           )}
+        </div>
+
+        {/* TOOLBAR — BOLD, ITALIC, BULLETS, NUMBERS */}
+        <div className="flex gap-3 justify-center mb-8 flex-wrap">
+          <button
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            className={`p-4 rounded-lg transition ${editor?.isActive("bold") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+          >
+            <Bold size={24} />
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            className={`p-4 rounded-lg transition ${editor?.isActive("italic") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+          >
+            <Italic size={24} />
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            className={`p-4 rounded-lg transition ${editor?.isActive("bulletList") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+          >
+            <List size={24} />
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            className={`p-4 rounded-lg transition ${editor?.isActive("orderedList") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+          >
+            <ListOrdered size={24} />
+          </button>
         </div>
 
         <EditorContent editor={editor} className="bg-white rounded-2xl shadow-lg mb-12" />
