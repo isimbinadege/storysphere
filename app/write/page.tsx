@@ -107,7 +107,7 @@ export default function Write() {
         <button
           type="button"
           onClick={() => alert(editor?.getHTML())}
-          className="mt-10 px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold rounded-full shadow-xl transition">
+          className="mt-10 px-10 py-4 bg-stone-600 hover:bg-stone-700 text-white text-lg font-semibold rounded-full shadow-xl transition">
           Test Content
         </button>
       </div>
