@@ -23,8 +23,17 @@ export default async function StoryPage({ params }: { params: { slug: string } }
   }
 
   return (
-    <article className="min-h-screen bg-gray-50 pt-24 px-4 pb-20">
+    <article className="min-h-screen bg-stone-50 pt-24 px-4 pb-20">
       <div className="max-w-4xl mx-auto">
+        {/* COVER IMAGE AT THE TOP */}
+        {story.cover_image && (
+          <img
+            src={story.cover_image}
+            alt={story.title}
+            className="w-full h-96 object-cover rounded-2xl shadow-2xl mb-12"
+          />
+        )}
+
         <h1 className="text-5xl md:text-6xl font-bold text-stone-800 leading-tight mb-8">
           {story.title}
         </h1>
@@ -39,7 +48,7 @@ export default async function StoryPage({ params }: { params: { slug: string } }
         </p>
 
         <div
-          className="prose prose-lg max-w-none prose-stone prose-headings:text-stone-800 prose-p:text-stone-700 prose-a:text-emerald-600 prose-strong:font-bold prose-blockquote:border-l-emerald-600 prose-blockquote:pl-6 prose-blockquote:italic prose-img:rounded-xl prose-img:my-10"
+          className="prose prose-lg max-w-none prose-stone prose-headings:text-stone-800 prose-p:text-stone-700 prose-a:text-stone-600 prose-strong:font-bold prose-blockquote:border-l-stone-400 prose-blockquote:pl-6 prose-blockquote:italic prose-img:rounded-xl prose-img:my-10"
           dangerouslySetInnerHTML={{ __html: story.content }}
         />
       </div>

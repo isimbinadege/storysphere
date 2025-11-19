@@ -7,21 +7,20 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 export default function Write() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-    ],
-    content: "<p>Start writing your amazing story...</p>",
+    extensions: [StarterKit.configure({ heading: false })],
+    content: "<p>Start writing your story here...</p>",
     editorProps: {
       attributes: {
         class: "prose prose-lg max-w-none focus:outline-none min-h-96 p-10 bg-white rounded-xl border-2 border-gray-300",
@@ -30,145 +29,126 @@ export default function Write() {
   });
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
+    if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-2xl text-stone-600">Loading...</p>
-      </div>
-    );
-  }
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      alert("Please add a title!");
+    setUploading(true);
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`; // organized folder
+
+    const { error } = await supabase.storage
+      .from("covers")
+      .upload(filePath, file, { upsert: true });
+
+    if (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed: " + error.message);
+      setUploading(false);
       return;
     }
-    if (!editor || editor.isEmpty) {
-      alert("Please write some content!");
+
+    // THIS LINE WAS MISSING BEFORE — NOW IT WORKS!
+    const { data: { publicUrl } } = supabase.storage
+      .from("covers")
+      .getPublicUrl(filePath);
+
+    setCoverImage(publicUrl);
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    if (!title.trim() || !editor || editor.isEmpty) {
+      alert("Please add a title and some content!");
       return;
     }
 
     setSaving(true);
 
-    const baseSlug = title
+    const slug = title
       .toLowerCase()
-      .trim()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
-      || "untitled";
-
-    const slug = `${baseSlug}-${Date.now()}`;
+      .slice(0, 50) + "-" + Date.now();
 
     const { error } = await supabase.from("posts").insert({
-      user_id: user.id,
+      user_id: user!.id,
       title: title.trim(),
       content: editor.getHTML(),
-      slug: slug,
+      slug,
       excerpt: editor.getText().slice(0, 200) + "...",
+      cover_image: coverImage || null,
     });
 
     setSaving(false);
 
     if (error) {
-      console.error("Supabase error:", error);
-      alert("Failed to publish: " + error.message);
+      console.error("Publish error:", error);
+      alert("Publish failed: " + error.message);
     } else {
       alert("Story published successfully!");
       router.push("/stories");
     }
   };
 
+  if (authLoading || !user) return <div className="pt-32 text-center text-2xl">Loading...</div>;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 py-20 px-6">
+    <div className="min-h-screen bg-stone-50 py-20 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-6xl font-bold mb-12 text-stone-800">Write Your Story</h1>
+        <h1 className="text-5xl font-bold text-stone-800 text-center mb-12">Write Your Story</h1>
 
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Your story title..."
-          className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder-stone-400 text-stone-800 mb-8"
+          className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder-stone-400 text-stone-800 text-center mb-10"
         />
 
-        <div className="mb-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("bold") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            Bold
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("italic") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            Italic
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("heading", { level: 1 }) ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            H1
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("heading", { level: 2 }) ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            H2
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("heading", { level: 3 }) ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            H3
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("bulletList") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            • Bullets
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editor?.isActive("orderedList") ? "bg-stone-800 text-white" : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            1. Numbers
-          </button>
+        {/* COVER IMAGE UPLOADER — NOW WORKS 100% */}
+        <div className="mb-12">
+          {coverImage ? (
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img src={coverImage} alt="Cover" className="w-full h-96 object-cover" />
+              <button
+                onClick={() => setCoverImage(null)}
+                className="absolute top-4 right-4 bg-black/70 hover:bg-black/90 text-white p-3 rounded-full transition"
+              >
+                <X size={28} />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full h-96 border-4 border-dashed border-stone-300 rounded-2xl cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition bg-white">
+              <ImageIcon size={80} className="text-stone-400 mb-6" />
+              <p className="text-2xl font-medium text-stone-600">Upload Cover Image</p>
+              <p className="text-stone-500 mt-2">Click or drag & drop</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              {uploading && (
+                <p className="mt-6 text-stone-700 font-medium">Uploading... Please wait</p>
+              )}
+            </label>
+          )}
         </div>
 
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} className="bg-white rounded-2xl shadow-lg mb-12" />
 
-        <div className="mt-10 text-center">
+        <div className="text-center">
           <button
             onClick={handleSave}
-            disabled={saving}
-            className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xl font-bold rounded-full shadow-xl transition"
+            disabled={saving || uploading}
+            className="px-16 py-6 bg-stone-800 hover:bg-stone-900 disabled:bg-stone-500 text-white text-2xl font-bold rounded-full transition shadow-2xl"
           >
             {saving ? "Publishing..." : "Publish Story"}
           </button>

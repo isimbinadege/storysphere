@@ -7,7 +7,7 @@ export const revalidate = 10;
 async function getAllStories() {
   const { data } = await supabase
     .from("posts")
-    .select("id, title, excerpt, slug, created_at, content")
+    .select("id, title, excerpt, slug, created_at, content, cover_image")
     .order("created_at", { ascending: false });
 
   return data || [];
@@ -17,7 +17,7 @@ export default async function StoriesPage() {
   const stories = await getAllStories();
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 px-4 pb-20">
+    <div className="min-h-screen bg-stone-50 pt-24 px-4 pb-20">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-5xl font-bold text-stone-800 text-center mb-12">
           All Stories
@@ -36,11 +36,19 @@ export default async function StoriesPage() {
                 className="block group"
               >
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                  {/* Cover placeholder */}
-                  <div className="h-48 bg-gradient-to-br from-stone-300 to-stone-500" />
+                  {/* REAL COVER IMAGE */}
+                  {story.cover_image ? (
+                    <img
+                      src={story.cover_image}
+                      alt={story.title}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="h-48 bg-gradient-to-br from-stone-300 to-stone-500" />
+                  )}
 
                   <div className="p-6">
-                    <h2 className="text-2xl font-bold text-stone-800 group-hover:text-emerald-700 transition">
+                    <h2 className="text-2xl font-bold text-stone-800 group-hover:text-stone-600 transition">
                       {story.title}
                     </h2>
                     <p className="mt-3 text-stone-600 line-clamp-3">
