@@ -2,18 +2,17 @@
 import { supabase } from "@/lib/supabaseClient";
 
 async function getStoryBySlug(slug: string) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("posts")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  if (error || !data) return null;
   return data;
 }
 
-export default async function StoryPage({ params }: { slug } }: { params: { slug: string } }) {
-  const story = await getStoryBySlug(slug);
+export default async function StoryPage({ params }: { params: { slug: string } }) {
+  const story = await getStoryBySlug(params.slug);
 
   if (!story) {
     return (
@@ -31,7 +30,8 @@ export default async function StoryPage({ params }: { slug } }: { params: { slug
         </h1>
 
         <p className="text-stone-500 text-lg mb-12">
-          Published on {new Date(story.created_at).toLocaleDateString("en-US", {
+          Published on{" "}
+          {new Date(story.created_at).toLocaleDateString("en-US", {
             month: "long",
             day: "numeric",
             year: "numeric",

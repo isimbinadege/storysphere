@@ -88,9 +88,7 @@ export default function Navbar() {
             <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="block text-lg hover:text-stone-300">
               About
             </Link>
-              <Link href="/stories" className="hover:text-stone-300 transition">
-  Stories
-</Link>
+   
             <div className="border-t border-stone-700 pt-4 mt-4">
               {user ? (
                 <>

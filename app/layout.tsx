@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 export const metadata = {
-  title: 'Medium Clone — My Capstone',
+  title: 'StorySphere — My Capstone',
   description: 'A lightweight publishing platform built with Next.js (App Router).',
 };
 
