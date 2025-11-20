@@ -1,6 +1,7 @@
 // app/stories/[slug]/page.tsx
 import { supabase } from "@/lib/supabaseClient";
 import ClapButton from "../../components/ClapButton";   
+import CommentSection from "@/app/components/CommentSection";
 
 
 async function getStoryBySlug(slug: string) {
@@ -44,6 +45,7 @@ export default async function StoryPage({ params }: { params: { slug: string } }
         <div className="flex justify-center py-12 border-t-2 border-stone-200">
           <ClapButton postId={story.id} initialCount={story.claps_count || 0} />
         </div>
+        <CommentSection postId={story.id} />
       </div>
     </article>
   );
