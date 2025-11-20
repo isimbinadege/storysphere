@@ -1,13 +1,14 @@
-// app/stories/page.tsx
+
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
+import { Heart, MessageCircle } from "lucide-react";
 
 export const revalidate = 10;
 
 async function getAllStories() {
   const { data } = await supabase
     .from("posts")
-    .select("id, title, excerpt, slug, created_at, content, cover_image")
+    .select("id, title, excerpt, slug, created_at, content, cover_image, claps_count, comments_count")
     .order("created_at", { ascending: false });
 
   return data || [];
@@ -36,7 +37,7 @@ export default async function StoriesPage() {
                 className="block group"
               >
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                  {/* REAL COVER IMAGE */}
+                  {/* COVER IMAGE */}
                   {story.cover_image ? (
                     <img
                       src={story.cover_image}
@@ -48,20 +49,33 @@ export default async function StoriesPage() {
                   )}
 
                   <div className="p-6">
-                    <h2 className="text-2xl font-bold text-stone-800 group-hover:text-stone-600 transition">
+                    <h2 className="text-2xl font-bold text-stone-800 group-hover:text-stone-600 transition line-clamp-2">
                       {story.title}
                     </h2>
                     <p className="mt-3 text-stone-600 line-clamp-3">
                       {story.excerpt ||
                         story.content.replace(/<[^>]*>/g, "").slice(0, 150) + "..."}
                     </p>
-                    <p className="mt-4 text-sm text-stone-500">
-                      {new Date(story.created_at).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
+
+                    {/* CLAPS + COMMENTS + DATE — SAME AS HOME PAGE */}
+                    <div className="mt-6 flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-5 text-stone-600">
+                        <div className="flex items-center gap-1.5">
+                          <Heart size={18} className="fill-red-500 text-red-500" />
+                          <span className="font-medium">{story.claps_count || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MessageCircle size={18} />
+                          <span className="font-medium">{story.comments_count || 0}</span>
+                        </div>
+                      </div>
+                      <span className="text-stone-500">
+                        {new Date(story.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Link>
