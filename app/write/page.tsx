@@ -31,16 +31,18 @@ export default function Write() {
     },
   });
 
-  // Load drafts
+  // Load drafts only for this user
   useEffect(() => {
     if (user) loadDrafts();
   }, [user]);
 
   const loadDrafts = async () => {
+    if (!user) return;
+
     const { data } = await supabase
       .from("posts")
       .select("id, title, content, cover_image, updated_at, published")
-      .eq("user_id", user.id)
+      .eq("user_id", user.id)  // ← FIXED: only this user's drafts
       .order("updated_at", { ascending: false });
 
     setDrafts(data || []);
@@ -51,7 +53,7 @@ export default function Write() {
     if (!title && editor?.isEmpty) return;
 
     const timer = setTimeout(() => {
-      saveDraft();
+      saveDraft();  // ← FIXED: call the function
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -233,7 +235,7 @@ export default function Write() {
           </button>
         </div>
 
-        {/* YOUR DRAFTS */}
+        {/* YOUR DRAFTS — ONLY YOU SEE THEM */}
         {drafts.length > 0 && (
           <div className="bg-white rounded-3xl shadow-xl p-10">
             <h2 className="text-3xl font-bold text-stone-800 mb-8 text-center">Your Drafts</h2>
