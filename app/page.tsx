@@ -60,8 +60,8 @@ export default async function HomePage() {
         </h2>
 
         {stories.length === 0 ? (
-          <div class="text-center py-24">
-            <p class="text-2xl text-stone-600 mb-10">
+          <div className="text-center py-24">
+            <p className="text-2xl text-stone-600 mb-10">
               No stories yet — be the first to share yours.
             </p>
             <Link
