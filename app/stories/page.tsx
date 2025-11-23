@@ -1,4 +1,4 @@
-
+// app/stories/page.tsx
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { Heart, MessageCircle } from "lucide-react";
@@ -9,6 +9,7 @@ async function getAllStories() {
   const { data } = await supabase
     .from("posts")
     .select("id, title, excerpt, slug, created_at, content, cover_image, claps_count, comments_count")
+    .eq("published", true)           // ← ONLY PUBLISHED
     .order("created_at", { ascending: false });
 
   return data || [];
@@ -31,19 +32,10 @@ export default async function StoriesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {stories.map((story) => (
-              <Link
-                key={story.id}
-                href={`/stories/${story.slug}`}
-                className="block group"
-              >
+              <Link key={story.id} href={`/stories/${story.slug}`} className="block group">
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                  {/* COVER IMAGE */}
                   {story.cover_image ? (
-                    <img
-                      src={story.cover_image}
-                      alt={story.title}
-                      className="w-full h-48 object-cover"
-                    />
+                    <img src={story.cover_image} alt={story.title} className="w-full h-48 object-cover" />
                   ) : (
                     <div className="h-48 bg-gradient-to-br from-stone-300 to-stone-500" />
                   )}
@@ -53,11 +45,9 @@ export default async function StoriesPage() {
                       {story.title}
                     </h2>
                     <p className="mt-3 text-stone-600 line-clamp-3">
-                      {story.excerpt ||
-                        story.content.replace(/<[^>]*>/g, "").slice(0, 150) + "..."}
+                      {story.excerpt || story.content.replace(/<[^>]*>/g, "").slice(0, 150) + "..."}
                     </p>
 
-                    {/* CLAPS + COMMENTS + DATE — SAME AS HOME PAGE */}
                     <div className="mt-6 flex items-center justify-between text-sm">
                       <div className="flex items-center gap-5 text-stone-600">
                         <div className="flex items-center gap-1.5">

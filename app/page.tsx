@@ -7,6 +7,7 @@ async function getStories() {
   const { data } = await supabase
     .from("posts")
     .select("id, title, excerpt, slug, created_at, content, cover_image, claps_count, comments_count")
+    .eq("published", true)           // ← ONLY PUBLISHED
     .order("created_at", { ascending: false })
     .limit(12);
 
@@ -59,8 +60,8 @@ export default async function HomePage() {
         </h2>
 
         {stories.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-2xl text-stone-600 mb-10">
+          <div class="text-center py-24">
+            <p class="text-2xl text-stone-600 mb-10">
               No stories yet — be the first to share yours.
             </p>
             <Link
@@ -78,13 +79,8 @@ export default async function HomePage() {
                 href={`/stories/${story.slug}`}
                 className="group block bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
               >
-                {/* COVER IMAGE */}
                 {story.cover_image ? (
-                  <img
-                    src={story.cover_image}
-                    alt={story.title}
-                    className="w-full h-56 object-cover"
-                  />
+                  <img src={story.cover_image} alt={story.title} className="w-full h-56 object-cover" />
                 ) : (
                   <div className="h-56 bg-gradient-to-br from-stone-200 to-stone-300" />
                 )}
@@ -97,7 +93,6 @@ export default async function HomePage() {
                     {story.excerpt || story.content.replace(/<[^>]*>/g, "").slice(0, 140) + "..."}
                   </p>
 
-                  {/* CLAPS + COMMENTS + DATE */}
                   <div className="mt-8 flex items-center justify-between text-sm">
                     <div className="flex items-center gap-5 text-stone-600">
                       <div className="flex items-center gap-1.5">
@@ -128,7 +123,7 @@ export default async function HomePage() {
               href="/stories"
               className="inline-block px-12 py-5 bg-stone-800 text-white font-medium text-lg rounded-full hover:bg-stone-900 transition shadow-lg"
             >
-              View All Stories →
+              View All Stories
             </Link>
           </div>
         )}
