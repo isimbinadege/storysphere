@@ -1,30 +1,23 @@
-// app/search/page.tsx
-import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { Search, User, BookOpen } from "lucide-react";
 
 async function searchEverything(query: string) {
   if (!query.trim()) return { users: [], stories: [] };
 
-  // Search users by email (or you can add username later)
-  const { data: users } = await supabase
-    .from("auth.users")
-    .select("id, email")
-    .ilike("email", `%${query}%`)
-    .limit(5);
-
-  // Search stories by title or content
-  const { data: stories } = await supabase
-    .from("posts")
-    .select("id, title, slug, excerpt, cover_image, user_id")
-    .eq("published", true)
-    .or(`title.ilike.%${query}%, content.ilike.%${query}%`)
-    .limit(10);
-
-  return {
-    users: users || [],
-    stories: stories || [],
-  };
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/search?q=${encodeURIComponent(query)}`, {
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      return { users: [], stories: [] };
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Search error:', error);
+    return { users: [], stories: [] };
+  }
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
@@ -57,14 +50,19 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                   href={`/profile/${user.id}`}
                   className="flex items-center gap-6 p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {user.email[0].toUpperCase()}
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name || user.username || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      (user.name || user.username || user.email)[0].toUpperCase()
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-stone-800">
-                      {user.email.split("@")[0]}
+                      {user.name || user.username || user.email.split("@")[0]}
                     </h3>
                     <p className="text-stone-600">{user.email}</p>
+                    {user.bio && <p className="text-stone-500 text-sm mt-1">{user.bio}</p>}
                   </div>
                 </Link>
               ))}
@@ -86,9 +84,9 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                   className="block group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition"
                 >
                   <div className="flex">
-                    {story.cover_image && (
+                    {story.coverImage && (
                       <img
-                        src={story.cover_image}
+                        src={story.coverImage}
                         alt={story.title}
                         className="w-48 h-32 object-cover"
                       />
@@ -99,6 +97,9 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                       </h3>
                       <p className="mt-3 text-stone-600 line-clamp-2">
                         {story.excerpt || "No preview available"}
+                      </p>
+                      <p className="mt-2 text-sm text-stone-500">
+                        by {story.author.name || story.author.username || 'Anonymous'}
                       </p>
                     </div>
                   </div>
