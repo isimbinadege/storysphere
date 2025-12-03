@@ -1,28 +1,53 @@
+"use client";
+
 import Link from "next/link";
 import { Search, User, BookOpen } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 
-async function searchEverything(query: string) {
-  if (!query.trim()) return { users: [], stories: [] };
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q') || "";
+  const [users, setUsers] = useState<any[]>([]);
+  const [stories, setStories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/search?q=${encodeURIComponent(query)}`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      return { users: [], stories: [] };
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Search error:', error);
-    return { users: [], stories: [] };
+  useEffect(() => {
+    const searchEverything = async () => {
+      if (!query.trim()) {
+        setUsers([]);
+        setStories([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data.users || []);
+          setStories(data.stories || []);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    searchEverything();
+  }, [query]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 pt-28 px-6 pb-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-2xl text-stone-600">Searching...</p>
+        </div>
+      </div>
+    );
   }
-}
-
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
-  const query = searchParams.q || "";
-  const { users, stories } = await searchEverything(query);
 
   return (
     <div className="min-h-screen bg-stone-50 pt-28 px-6 pb-20">
@@ -119,5 +144,19 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-stone-50 pt-28 px-6 pb-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-2xl text-stone-600">Loading search...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -91,7 +91,7 @@ export default function Write() {
   };
 
   const publishStory = async () => {
-    if (!title.trim() || !editor || editor.isEmpty) {
+    if (!title.trim() || !editor || editor.isEmpty || !user) {
       alert("Please add a title and content!");
       return;
     }
